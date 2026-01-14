@@ -39,186 +39,275 @@
     .badge.bad{background:#fee2e2; color:#7f1d1d}
     footer { text-align:center; font-size:12px; color:#6b7280; margin:28px 0; }
     .hidden{display:none}
+    #preview-container { margin-top:15px; display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+    .preview-item { position:relative; border-radius:10px; overflow:hidden; background:#f0f0f0; }
+    .preview-item img, .preview-item video { width:100%; height:150px; object-fit:cover; }
+    .preview-item .remove-btn { position:absolute; top:5px; right:5px; background:rgba(255,0,0,0.8); color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; }
+    .preview-item .remove-btn:hover { background:rgba(255,0,0,1); }
+    #cameraContainer { position:fixed; top:0; left:0; right:0; bottom:0; background:black; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1000; }
+    #videoStream { max-width:100%; max-height:80vh; border-radius:10px; }
+    .camera-controls { display:flex; gap:10px; margin-top:20px; }
+    .camera-controls button { width:auto; padding:15px 25px; }
   </style>
 </head>
 <body>
-
-<div class="splash" id="splash">
-  <svg class="shield" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L20 6V11C20 16.25 16.5 20.74 12 22C7.5 20.74 4 16.25 4 11V6L12 2Z" fill="#ffffff" opacity="0.95"/></svg>
-  <h1>OBSERVA+</h1>
-  <p>Observación y Prevención Operativa</p>
-  <div class="card-info">
-    <p style="margin-top:0">App progresiva para monitoreo y observación en tiempo real</p>
-    <p>Instalada desde GitHub Pages</p>
-    <p style="font-size:0.9em; opacity:0.9">Es una PWA (Progressive Web App) que puedes instalar como app en tu dispositivo y usar sin conexión a internet.</p>
-  </div>
-  <button onclick="iniciarApp()">Comenzar →</button>
-</div>
-
-<header id="header" class="hidden">
-  <div class="brand">
-    <svg class="shield" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L20 6V11C20 16.25 16.5 20.74 12 22C7.5 20.74 4 16.25 4 11V6L12 2Z" fill="#ffffff" opacity="0.95"/></svg>
-    <div>
-      <h1 style="margin:0">OBSERVA+</h1>
-      <p style="margin:0;opacity:.9">Observación y Prevención Operativa</p>
+  <div class="splash" id="splash">
+    <svg class="shield" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L20 6V11C20 16.25 16.5 20.74 12 22C7.5 20.74 4 16.25 4 11V6L12 2Z" fill="#ffffff" opacity="0.95"/>
+    </svg>
+    <h1>OBSERVA+</h1>
+    <p>Observación y Prevención Operativa</p>
+    <div class="card-info">
+      <p style="margin-top:0">App progresiva para monitoreo y observación en tiempo real</p>
+      <p>Instalada desde GitHub Pages</p>
+      <p style="font-size:0.9em; opacity:0.9">Es una PWA (Progressive Web App) que puedes instalar como app en tu dispositivo y usar sin conexión a internet.</p>
     </div>
+    <button onclick="iniciarApp()">Comenzar →</button>
   </div>
-</header>
 
-<main id="main">
-
-  <div class="card">
-    <h2>Nuevo Reporte</h2>
-
-    <div class="grid">
+  <header id="header" class="hidden">
+    <div class="brand">
+      <svg class="shield" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L20 6V11C20 16.25 16.5 20.74 12 22C7.5 20.74 4 16.25 4 11V6L12 2Z" fill="#ffffff" opacity="0.95"/>
+      </svg>
       <div>
-        <label>Edificio</label>
-        <select id="edificio">
-          <option>Seleccione…</option>
-          <option>Edificio 1</option>
-          <option>Edificio 2</option>
-          <option>Edificio 3</option>
-          <option>Edificio 4</option>
-        </select>
-      </div>
-      <div>
-        <label>Lugar específico</label>
-        <input type="text" placeholder="Ej: Pasillo técnico, laboratorio, acceso" />
-      </div>
-            <div>
-        <label>Fecha (dd-mm-aaaa)</label>
-        <input type="date" id="fecha" required />
+        <h1 style="margin:0">OBSERVA+</h1>
+        <p style="margin:0;opacity:.9">Observación y Prevención Operativa</p>
       </div>
     </div>
+  </header>
 
-    <label>Tipo de novedad</label>
-    <select id="tipo" onchange="toggleInfra()">
-      <option>Seleccione…</option>
-      <option>Conducta insegura</option>
-      <option>Desviación de procedimiento</option>
-      <option>Riesgo humano / fatiga</option>
-      <option>Riesgo operativo</option>
-      <option>Anomalía de rutina</option>
-      <option>Daño en infraestructura</option>
-    </select>
-
-    <div id="infra" class="hidden">
-      <label>Tipo de daño en infraestructura</label>
-      <select>
-        <option>Iluminación / eléctrico</option>
-        <option>Puertas / accesos</option>
-        <option>Pisos / baldosas</option>
-        <option>Humedad / filtración</option>
-        <option>Señalización</option>
-        <option>Otro</option>
+  <main id="main">
+    <div class="card">
+      <h2>Nuevo Reporte</h2>
+      
+      <!-- PRIMERO: FECHA -->
+      <label>Fecha (dd-mm-aaaa)</label>
+      <input type="date" id="fecha" required />
+      
+      <!-- SEGUNDO: EDIFICIO -->
+      <label>Edificio</label>
+      <select id="edificio">
+        <option>Seleccione…</option>
+        <option>Edificio 1</option>
+        <option>Edificio 2</option>
+        <option>Edificio 3</option>
+        <option>Edificio 4</option>
       </select>
-    </div>
-
-    <label>Descripción de la novedad</label>
-    <textarea rows="4" placeholder="Describa de forma objetiva lo observado"></textarea>
-
-    <label>Motivo del reporte</label>
-    <select multiple>
-      <option>Fuera de horario</option>
-      <option>Fuera de procedimiento</option>
-      <option>Permanencia inusual</option>
-      <option>Zona crítica</option>
-      <option>Evento repetido</option>
-      <option>Condición insegura de infraestructura</option>
-    </select>
-
-    <div class="grid">
-      <div>
-        <label>Nivel de riesgo</label>
-        <select>
-          <option>🟢 Bajo</option>
-          <option>🟡 Medio</option>
-          <option>🔴 Alto</option>
+      
+      <!-- TERCERO: LUGAR ESPECÍFICO -->
+      <label>Lugar específ ico</label>
+      <input type="text" id="lugar" placeholder="Ej: Pasillo técnico, laboratorio, acceso" />
+      
+      <!-- RESTO DE CAMPOS -->
+      <label>Tipo de novedad</label>
+      <select id="tipo" onchange="toggleInfra()">
+        <option>Seleccione…</option>
+        <option>Conducta insegura</option>
+        <option>Desviación de procedimiento</option>
+        <option>Riesgo humano / fatiga</option>
+        <option>Riesgo operativo</option>
+        <option>Anomalía de rutina</option>
+        <option>Daño en infraestructura</option>
+      </select>
+      
+      <div id="infra" class="hidden">
+        <label>Tipo de daño en infraestructura</label>
+        <select id="tipoInfra">
+          <option>Iluminación / eléctrico</option>
+          <option>Puertas / accesos</option>
+          <option>Pisos / baldosas</option>
+          <option>Humedad / filtración</option>
+          <option>Señalización</option>
+          <option>Otro</option>
         </select>
       </div>
-      <div>
-        <label>Enviar al PAE (RRHH)</label>
-        <select>
-          <option>Sí (paetq@tqgrupo.com)</option>
-          <option>No</option>
-        </select>
+      
+      <label>Descripción de la novedad</label>
+      <textarea id="descripcion" rows="4" placeholder="Describa de forma objetiva lo observado"></textarea>
+      
+      <label>Motivo del reporte</label>
+      <select id="motivo" multiple>
+        <option>Fuera de horario</option>
+        <option>Fuera de procedimiento</option>
+        <option>Permanencia inusual</option>
+        <option>Zona crítica</option>
+        <option>Evento repetido</option>
+        <option>Condición insegura de infraestructura</option>
+      </select>
+      
+      <label>Nivel de riesgo</label>
+      <select id="riesgo">
+        <option>🟢 Bajo</option>
+        <option>🟡 Medio</option>
+        <option>🔴 Alto</option>
+      </select>
+      
+      <label>Enviar al PAE (RRHH)</label>
+      <select id="enviarPAE">
+        <option>Sí (paetq@tqgrupo.com)</option>
+        <option>No</option>
+      </select>
+      
+      <label>📷 Adjuntar múltiples fotos/videos</label>
+      <input type="file" id="evidencias" accept="image/*,video/*" multiple onchange="previewFiles(event)" />
+      <p class="note">⚠️ Puede adjuntar varias fotos y/o videos. Evite adjuntar imágenes con rostros si no es necesario.</p>
+      
+      <div id="preview-container"></div>
+      
+      <button onclick="abrirCamara()">📷 Capturar Foto/Video</button>
+      
+      <div id="cameraContainer" class="hidden">
+        <video id="videoStream" autoplay playsinline></video>
+        <div class="camera-controls">
+          <button onclick="capturarFoto()">📸 Capturar Foto</button>
+          <button class="secondary" onclick="cerrarCamara()">✕ Cerrar</button>
+        </div>
       </div>
+      <canvas id="canvas" class="hidden"></canvas>
+      
+      <button onclick="enviarReporte()">✉️ Enviar Reporte</button>
+      <button onclick="sendMailWithAttachment()" class="secondary">📝 Enviar por Correo</button>
+      <button onclick="compartirWhatsApp()" class="secondary">📱 Compartir por WhatsApp</button>
     </div>
+  </main>
 
-    <label>Adjuntar evidencia</label>
-    <input type="file" />
-    <div class="note">Evite adjuntar imágenes con rostros si no es necesario.</div>
-        <button class="secondary" onclick="abrirCamara()" style="margin-top:10px;">\ud83d\udcf7 Capturar Foto/Video</button>
-    <div id="cameraContainer" class="hidden" style="margin-top:15px; border-radius:10px; overflow:hidden;">
-      <video id="videoStream" style="width:100%; background:#000;"></video>
-      <canvas id="canvas" style="display:none;"></canvas>
-      <div style="margin-top:10px; display:flex; gap:10px;">
-        <button onclick="capturarFoto()" style="flex:1;">\ud83d\udcf8 Capturar Foto</button>
-        <button onclick="cerrarCamara()" style="flex:1; background:#ccc; color:#333;">✕ Cerrar</button>
-      </div>
-    </div>
+  <footer>
+    OBSERVA+ · Uso preventivo · No implica sanción automática
+  </footer>
 
-    <button onclick="sendMail()">Enviar Reporte</button>
-        <button onclick="compartirWhatsApp()" style="margin-top:10px; background:#25D366; width:100%;">📱 Compartir por WhatsApp</button>
-  </div>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
 
-</main>
+    let archivosSeleccionados = [];
 
-<script>
-  function iniciarApp(){
-    document.getElementById('splash').classList.add('hidden');
-    document.getElementById('header').classList.remove('hidden');
-    document.getElementById('main').classList.add('active');
-  }
-  function toggleInfra(){
-    const t = document.getElementById('tipo').value;
-    document.getElementById('infra').classList.toggle('hidden', t !== 'Daño en infraestructura');
-  }
-  function sendMail(){
-    window.location.href='mailto:paetq@tqgrupo.com?subject=Reporte%20Preventivo%20OBSERVA%2B&body=Se%20ha%20generado%20un%20reporte%20preventivo%20desde%20OBSERVA%2B.%0A%0AFavor%20revisar%20la%20informaci%C3%B3n%20del%20formulario%20adjunto.';
-  }
-  let stream = null;
-  function abrirCamara(){
-    const cameraContainer = document.getElementById('cameraContainer');
-    const video = document.getElementById('videoStream');
-    cameraContainer.classList.remove('hidden');
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-      .then(s => { stream = s; video.srcObject = s; video.play(); })
-      .catch(e => alert('No se pudo acceder a la camara: ' + e.message));
-  }
-  function capturarFoto(){
-    const canvas = document.getElementById('canvas');
-    const video = document.getElementById('videoStream');
-    const ctx = canvas.getContext('2d');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
-    canvas.toBlob(blob => {
-      const file = new File([blob], 'captura.jpg', { type: 'image/jpeg' });
+    function iniciarApp(){
+      document.getElementById('splash').classList.add('hidden');
+      document.getElementById('header').classList.remove('hidden');
+      document.getElementById('main').classList.add('active');
+    }
+
+    function toggleInfra(){
+      const t = document.getElementById('tipo').value;
+      document.getElementById('infra').classList.toggle('hidden', t !== 'Daño en infraestructura');
+    }
+
+    function previewFiles(event) {
+      const files = Array.from(event.target.files);
+      archivosSeleccionados = files;
+      renderizarPrevisualizacion();
+    }
+
+    function renderizarPrevisualizacion() {
+      const preview = document.getElementById('preview-container');
+      preview.innerHTML = '';
+      
+      archivosSeleccionados.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const div = document.createElement('div');
+          div.className = 'preview-item';
+          
+          const tipo = file.type.startsWith('image') ? 'image' : 'video';
+          let html = '';
+          
+          if (tipo === 'image') {
+            html = `<img src="${e.target.result}" alt="Foto" />`;
+          } else {
+            html = `<video controls><source src="${e.target.result}" type="${file.type}">Tu navegador no soporta video</video>`;
+          }
+          
+          html += `<button class="remove-btn" onclick="removerArchivo(${index})">×</button>`;
+          div.innerHTML = html;
+          preview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removerArchivo(index) {
+      archivosSeleccionados.splice(index, 1);
+      const input = document.getElementById('evidencias');
       const dt = new DataTransfer();
-      dt.items.add(file);
-      document.querySelector('input[type=file]').files = dt.files;
-      alert('Foto capturada y lista para enviar');
-      cerrarCamara();
-    });
-  }
-  function cerrarCamara(){
-    if(stream) stream.getTracks().forEach(t => t.stop());
-    document.getElementById('cameraContainer').classList.add('hidden');
-  }
+      archivosSeleccionados.forEach(file => dt.items.add(file));
+      input.files = dt.files;
+      renderizarPrevisualizacion();
+    }
+
+    let stream = null;
+
+    function abrirCamara(){
+      const cameraContainer = document.getElementById('cameraContainer');
+      const video = document.getElementById('videoStream');
+      cameraContainer.classList.remove('hidden');
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+        .then(s => { stream = s; video.srcObject = s; video.play(); })
+        .catch(e => alert('No se pudo acceder a la cámara: ' + e.message));
+    }
+
+    function capturarFoto(){
+      const canvas = document.getElementById('canvas');
+      const video = document.getElementById('videoStream');
+      const ctx = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      
+      canvas.toBlob(blob => {
+        const file = new File([blob], 'captura_' + Date.now() + '.jpg', { type: 'image/jpeg' });
+        archivosSeleccionados.push(file);
+        renderizarPrevisualizacion();
+        alert('Foto capturada y agregada!');
+        cerrarCamara();
+      });
+    }
+
+    function cerrarCamara(){
+      if(stream) stream.getTracks().forEach(t => t.stop());
+      document.getElementById('cameraContainer').classList.add('hidden');
+    }
+
+    function enviarReporte(){
+      const fecha = document.getElementById('fecha').value;
+      const edificio = document.getElementById('edificio').value;
+      const lugar = document.getElementById('lugar').value;
+      const tipo = document.getElementById('tipo').value;
+      const descripcion = document.getElementById('descripcion').value;
+      
+      if(!fecha || edificio === 'Seleccione…' || !lugar || tipo === 'Seleccione…' || !descripcion) {
+        alert('Por favor complete todos los campos obligatorios');
+        return;
+      }
+      
+      alert('Reporte preparado para enviar. Ahora selecciona compartir por WhatsApp o Correo.');
+    }
+
+    function sendMailWithAttachment(){
+      const fecha = document.getElementById('fecha').value;
+      const edificio = document.getElementById('edificio').value;
+      const lugar = document.getElementById('lugar').value;
+      const tipo = document.getElementById('tipo').value;
+      const descripcion = document.getElementById('descripcion').value;
+      const riesgo = document.getElementById('riesgo').value;
+      
+      const body = `Reporte Preventivo OBSERVA+%0A%0AFecha: ${fecha}%0AEdificio: ${edificio}%0ALugar: ${lugar}%0ATipo: ${tipo}%0ARiesgo: ${riesgo}%0A%0ADescripci%C3%B3n:%0A${descripcion}%0A%0ANota: Las im%C3%A1genes/videos deben adjuntarse manualmente al correo.`;
+      
+      window.location.href = `mailto:paetq@tqgrupo.com?subject=Reporte%20Preventivo%20OBSERVA%2B&body=${body}`;
+    }
+
     function compartirWhatsApp(){
-    const edificio = document.getElementById('edificio').value;
-    const tipo = document.getElementById('tipo').value;
-    const descripcion = document.querySelector('textarea').value;
-    const mensaje = `*REPORTE OBSERVA+*\n\nEdificio: ${edificio}\nTipo: ${tipo}\nDescripcion: ${descripcion}\n\nEnviado desde OBSERVA+ - Observacion y prevención Operativa`;
-    const enlace = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
-    window.open(enlace, '_blank');
-  }
-</script>
-
-<footer>
-  OBSERVA+ · Uso preventivo · No implica sanción automática
-</footer>
-
+      const edificio = document.getElementById('edificio').value;
+      const tipo = document.getElementById('tipo').value;
+      const descripcion = document.getElementById('descripcion').value;
+      const fecha = document.getElementById('fecha').value;
+      
+      const mensaje = `*REPORTE OBSERVA+*%0A%0AFecha: ${fecha}%0AEdificio: ${edificio}%0ATipo: ${tipo}%0ADescripci%C3%B3n: ${descripcion}%0A%0AEnviado desde OBSERVA+ - Observaci%C3%B3n y Prevenci%C3%B3n Operativa`;
+      
+      const enlace = `https://wa.me/?text=${mensaje}`;
+      window.open(enlace, '_blank');
+    }
+  </script>
 </body>
 </html>
