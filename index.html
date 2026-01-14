@@ -144,6 +144,15 @@
     <label>Adjuntar evidencia</label>
     <input type="file" />
     <div class="note">Evite adjuntar imágenes con rostros si no es necesario.</div>
+        <button class="secondary" onclick="abrirCamara()" style="margin-top:10px;">\ud83d\udcf7 Capturar Foto/Video</button>
+    <div id="cameraContainer" class="hidden" style="margin-top:15px; border-radius:10px; overflow:hidden;">
+      <video id="videoStream" style="width:100%; background:#000;"></video>
+      <canvas id="canvas" style="display:none;"></canvas>
+      <div style="margin-top:10px; display:flex; gap:10px;">
+        <button onclick="capturarFoto()" style="flex:1;">\ud83d\udcf8 Capturar Foto</button>
+        <button onclick="cerrarCamara()" style="flex:1; background:#ccc; color:#333;">✕ Cerrar</button>
+      </div>
+    </div>
 
     <button onclick="sendMail()">Enviar Reporte</button>
   </div>
@@ -162,6 +171,35 @@
   }
   function sendMail(){
     window.location.href='mailto:paetq@tqgrupo.com?subject=Reporte%20Preventivo%20OBSERVA%2B&body=Se%20ha%20generado%20un%20reporte%20preventivo%20desde%20OBSERVA%2B.%0A%0AFavor%20revisar%20la%20informaci%C3%B3n%20del%20formulario%20adjunto.';
+  }
+  let stream = null;
+  function abrirCamara(){
+    const cameraContainer = document.getElementById('cameraContainer');
+    const video = document.getElementById('videoStream');
+    cameraContainer.classList.remove('hidden');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(s => { stream = s; video.srcObject = s; video.play(); })
+      .catch(e => alert('No se pudo acceder a la camara: ' + e.message));
+  }
+  function capturarFoto(){
+    const canvas = document.getElementById('canvas');
+    const video = document.getElementById('videoStream');
+    const ctx = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    canvas.toBlob(blob => {
+      const file = new File([blob], 'captura.jpg', { type: 'image/jpeg' });
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.querySelector('input[type=file]').files = dt.files;
+      alert('Foto capturada y lista para enviar');
+      cerrarCamara();
+    });
+  }
+  function cerrarCamara(){
+    if(stream) stream.getTracks().forEach(t => t.stop());
+    document.getElementById('cameraContainer').classList.add('hidden');
   }
 </script>
 
